@@ -8,8 +8,29 @@ test('renderiza datos reales, filtra backlog y abre criterios',()=>{
   const context=vm.createContext({document,window:{},StoryModel:require('../model.js'),console,Blob,URL,setTimeout});
   vm.runInContext(fs.readFileSync(require.resolve('../data.js'),'utf8'),context);
   vm.runInContext(fs.readFileSync(require.resolve('../app.js'),'utf8'),context);
-  assert.match(elements.get('result').textContent,/62 elementos/);
+  assert.match(elements.get('result').textContent,/60 elementos/);
   assert.match(elements.get('board').innerHTML,/SCRUM-147/);
+  const board=elements.get('board');
+  assert.doesNotMatch(board.innerHTML,/Sin sprint · finalizado|data-key="SCRUM-(44|47)"/);
+  const epicTitles=vm.runInContext("data.issues.filter(i=>i.type==='Epic').map(i=>i.title)",context);
+  assert.equal(epicTitles.length,8);
+  for(const title of epicTitles){
+    assert.ok(board.innerHTML.split('</thead>')[0].includes(title));
+    assert.ok(board.innerHTML.split('<tfoot>')[1].includes(title));
+  }
+  elements.get('listView').onclick();
+  assert.match(elements.get('result').textContent,/62 elementos/);
+  assert.match(board.innerHTML,/SCRUM-44/);
+  assert.match(board.innerHTML,/SCRUM-47/);
+  assert.equal(vm.runInContext("data.issues.filter(i=>['SCRUM-44','SCRUM-47'].includes(i.key)&&!i.sprint).length",context),2);
+  elements.get('mapView').onclick();
+  elements.get('tasks').checked=true;
+  vm.runInContext('render()',context);
+  assert.doesNotMatch(board.innerHTML,/Sin sprint · finalizado|data-key="SCRUM-(44|47)"/);
+  elements.get('tasks').checked=false;
+  elements.get('sprint').value='Sin sprint · finalizado';
+  vm.runInContext('render()',context);
+  assert.match(elements.get('result').textContent,/0 elementos/);
   elements.get('sprint').value='Backlog futuro';
   vm.runInContext('render()',context);
   assert.match(elements.get('result').textContent,/12 elementos/);

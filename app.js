@@ -20,7 +20,7 @@ function laneSort(a,b){if(a==='Backlog futuro')return -1;if(b==='Backlog futuro'
 function filtered(){const q=$('search').value.toLocaleLowerCase('es');return data.issues.filter(i=>(i.type==='Story'||($('tasks').checked&&i.type==='Task'))&&(!q||[i.key,i.title,i.description].join(' ').toLocaleLowerCase('es').includes(q))&&(!$('epic').value||(i.epic||'none')===$('epic').value)&&(!$('sprint').value||StoryModel.lane(i)===$('sprint').value)&&(!$('status').value||i.status===$('status').value)&&(!$('priority').value||i.moscow===$('priority').value));}
 function card(i){return '<button class="card '+i.moscow.toLowerCase()+'" data-key="'+i.key+'"><span class="key">'+i.key+' · '+(i.type==='Task'?'Tarea':'Historia')+'</span><h3>'+esc(i.title)+'</h3><div class="meta"><span class="badge '+statusClass(i.status)+'">'+esc(i.status)+'</span><span class="points">'+(i.points?esc(i.points)+' SP':'Sin estimar')+'</span></div><span class="priority">'+names[i.moscow]+' · Jira: '+esc(i.priority)+'</span></button>';}
 function render(){
-  const items=filtered();$('result').textContent=items.length+' elementos visibles';
+  const items=filtered().filter(i=>view!=='map'||StoryModel.lane(i)!=='Sin sprint · finalizado');$('result').textContent=items.length+' elementos visibles';
   if(!items.length){$('board').innerHTML='<p class="empty" style="padding:24px">No hay historias con estos filtros.</p>';return;}
   const epics=data.issues.filter(i=>i.type==='Epic').map(i=>({key:i.key,title:i.title}));
   if(items.some(i=>!i.epic))epics.push({key:'',title:'Sin épica asignada'});
@@ -29,10 +29,10 @@ function render(){
     $('board').innerHTML='<table class="list"><thead><tr><th>Ticket</th><th>Historia</th><th>Épica</th><th>Incremento</th><th>Prioridad</th><th>Estado Jira</th></tr></thead><tbody>'+items.map(i=>'<tr><td>'+i.key+'</td><td><button class="link" data-key="'+i.key+'">'+esc(i.title)+'</button></td><td>'+esc(epics.find(e=>e.key===i.epic)?.title||'Sin épica')+'</td><td>'+esc(StoryModel.lane(i))+'</td><td>'+names[i.moscow]+'</td><td>'+esc(i.status)+'</td></tr>').join('')+'</tbody></table>';
   }else{
     const lanes=[...new Set(items.map(StoryModel.lane))].sort(laneSort);
-    $('board').innerHTML='<table style="min-width:'+Math.max(600,170+columns.length*230)+'px"><thead><tr><th>Alcance / Sprint</th>'+columns.map(e=>'<th>'+esc(e.title)+'<small>'+esc(e.key)+'</small></th>').join('')+'</tr></thead><tbody>'+lanes.map(l=>{
+    $('board').innerHTML='<table class="story-map" style="min-width:'+Math.max(600,170+columns.length*230)+'px"><thead><tr><th>Alcance / Sprint</th>'+columns.map(e=>'<th scope="col">'+esc(e.title)+'<small>'+esc(e.key)+'</small></th>').join('')+'</tr></thead><tbody>'+lanes.map(l=>{
       const future=l==='Backlog futuro',uns=l.startsWith('Sin sprint');
       return '<tr class="'+(future?'future':uns?'unassigned':'mvp')+'"><th>'+esc(l)+'<small>'+(future?'EVOLUCIÓN · Sin sprint comprometido':uns?'Asignación histórica pendiente':'MVP · Incremento del producto')+'<br>'+items.filter(i=>StoryModel.lane(i)===l).length+' elementos</small></th>'+columns.map(e=>{const group=items.filter(i=>i.epic===e.key&&StoryModel.lane(i)===l);return '<td>'+(group.length?group.map(card).join(''):'<span class="empty">Sin historias</span>')+'</td>';}).join('')+'</tr>';
-    }).join('')+'</tbody><tfoot><tr><th>Épicas</th>'+columns.map(e=>'<td>'+esc(e.title)+'</td>').join('')+'</tr></tfoot></table>';
+    }).join('')+'</tbody><tfoot><tr><th>Épicas</th>'+columns.map(e=>'<th scope="col">'+esc(e.title)+'</th>').join('')+'</tr></tfoot></table>';
   }
 }
 function detail(key){

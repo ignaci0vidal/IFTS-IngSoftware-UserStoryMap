@@ -1,0 +1,22 @@
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const vm=require('node:vm');
+test('renderiza datos reales, filtra backlog y abre criterios',()=>{
+  const elements=new Map();
+  const document={getElementById(id){if(!elements.has(id))elements.set(id,{value:'',checked:false,innerHTML:'',textContent:'',addEventListener(){},setAttribute(){},showModal(){this.open=true;},close(){this.open=false;}});return elements.get(id);}};
+  const context=vm.createContext({document,window:{},StoryModel:require('../model.js'),console,Blob,URL,setTimeout});
+  vm.runInContext(fs.readFileSync(require.resolve('../data.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(require.resolve('../app.js'),'utf8'),context);
+  assert.match(elements.get('result').textContent,/62 elementos/);
+  assert.match(elements.get('board').innerHTML,/SCRUM-147/);
+  elements.get('sprint').value='Backlog futuro';
+  vm.runInContext('render()',context);
+  assert.match(elements.get('result').textContent,/12 elementos/);
+  elements.get('search').value='SCRUM-144';
+  vm.runInContext('render();detail("SCRUM-144")',context);
+  assert.match(elements.get('result').textContent,/1 elementos/);
+  assert.equal(elements.get('detail').open,true);
+  assert.match(elements.get('detailBody').innerHTML,/Criterios de aceptación/);
+  assert.match(elements.get('detailBody').innerHTML,/historial de movimientos/i);
+});

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#163c34">
+  <title>ECOMMERCEAPP · Mapa de historias</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script defer src="./data.js"></script>
+  <script defer src="./model.js"></script>
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <header>
+    <div class="brand"><span class="mark">E</span><span>ECOMMERCEAPP <small>Ingeniería de Software · IFTS 16</small></span></div>
+    <div class="actions"><label class="button secondary">Importar CSV<input id="import" type="file" accept=".csv,text/csv" hidden></label><button id="export">Exportar datos</button><button id="print">Imprimir</button></div>
+  </header>
+  <main>
+    <section class="intro"><div><p class="eyebrow">VISIÓN DEL PRODUCTO / ALCANCE Y EVOLUCIÓN</p><h1>Una visión compartida.<br><span>Historia por historia.</span></h1><p class="lead">Explora los incrementos del ecommerce y las oportunidades que siguen en el backlog.</p></div><div class="stamp"><span class="dot"></span> Datos de Jira<span id="date"></span><small>Instantánea · sin sincronización automática</small></div></section>
+    <section class="stats" id="stats" aria-label="Resumen del proyecto"></section>
+    <aside class="notice"><strong>Estado del producto y registro en Jira</strong><span>El equipo informa Sprint 3 implementado. Las tarjetas conservan los estados de la exportación. Las historias sin sprint no se asignan automáticamente a Sprint 4.</span></aside>
+    <section class="toolbar" aria-label="Filtros"><label class="search">Buscar historia<input id="search" type="search" placeholder="Título, clave o descripción…"></label><label>Épica<select id="epic"></select></label><label>Sprint<select id="sprint"></select></label><label>Estado<select id="status"></select></label><label>Prioridad<select id="priority"></select></label><button id="reset">Limpiar</button></section>
+    <div class="viewbar"><div><button id="mapView" aria-pressed="true">Mapa de historias</button><button id="listView" aria-pressed="false">Lista</button></div><label class="check"><input id="tasks" type="checkbox"> Incluir tareas</label><span id="result" role="status"></span></div>
+    <p class="hint">Columnas: épicas · Filas: incrementos · Selecciona una tarjeta para ver criterios y subtareas.</p>
+    <div class="legend"><span class="must">MUST</span><span class="should">SHOULD</span><span class="could">COULD</span><span class="none">SIN CATEGORIZAR</span></div>
+    <div id="board" class="board" tabindex="0" aria-label="Mapa de historias desplazable"></div>
+    <p id="message" role="status"></p>
+    <footer><span>Construido con tickets reales. Sin propuestas ficticias.</span><span>ECOMMERCEAPP / Product story map</span></footer>
+  </main>
+  <dialog id="detail"><div class="dialog-top"><span id="detailKey"></span><button id="close" aria-label="Cerrar detalle">Cerrar ×</button></div><div id="detailBody"></div></dialog>
+</body>
+</html>

@@ -19,7 +19,9 @@ function setup(){
 function laneSort(a,b){if(a==='Backlog futuro')return -1;if(b==='Backlog futuro')return 1;const na=Number(a.match(/Sprint (\d+)/)?.[1]??-1),nb=Number(b.match(/Sprint (\d+)/)?.[1]??-1);return nb-na||a.localeCompare(b);}
 function filtered(){const q=$('search').value.toLocaleLowerCase('es');return data.issues.filter(i=>(i.type==='Story'||($('tasks').checked&&i.type==='Task'))&&(!q||[i.key,i.title,i.description].join(' ').toLocaleLowerCase('es').includes(q))&&(!$('epic').value||(i.epic||'none')===$('epic').value)&&(!$('sprint').value||StoryModel.lane(i)===$('sprint').value)&&(!$('status').value||i.status===$('status').value)&&(!$('priority').value||i.moscow===$('priority').value));}
 function card(i){return '<button class="card '+i.moscow.toLowerCase()+'" data-key="'+i.key+'"><span class="key">'+i.key+' · '+(i.type==='Task'?'Tarea':'Historia')+'</span><h3>'+esc(i.title)+'</h3><div class="meta"><span class="badge '+statusClass(i.status)+'">'+esc(i.status)+'</span><span class="points">'+(i.points?esc(i.points)+' SP':'Sin estimar')+'</span></div><span class="priority">'+names[i.moscow]+' · Jira: '+esc(i.priority)+'</span></button>';}
+const legendPriorities=['MUST','SHOULD','COULD','NONE'];
 function render(){
+  legendPriorities.forEach(priority=>$('filter-'+priority).setAttribute('aria-pressed',String($('priority').value===priority)));
   const items=filtered().filter(i=>view!=='map'||StoryModel.lane(i)!=='Sin sprint · finalizado');$('result').textContent=items.length+' elementos visibles';
   if(!items.length){$('board').innerHTML='<p class="empty" style="padding:24px">No hay historias con estos filtros.</p>';return;}
   const epics=data.issues.filter(i=>i.type==='Epic').map(i=>({key:i.key,title:i.title}));
@@ -44,6 +46,7 @@ function detail(key){
 }
 function download(name,text,type){const url=URL.createObjectURL(new Blob([text],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 ['search','epic','sprint','status','priority','tasks'].forEach(id=>$(id).addEventListener('input',render));
+legendPriorities.forEach(priority=>$('filter-'+priority).onclick=()=>{$('priority').value=$('priority').value===priority?'':priority;render();});
 $('reset').onclick=()=>{['search','epic','sprint','status','priority'].forEach(id=>$(id).value='');$('tasks').checked=false;render();};
 $('board').onclick=e=>{const c=e.target.closest('[data-key]');if(c)detail(c.dataset.key);};
 $('close').onclick=()=>$('detail').close();

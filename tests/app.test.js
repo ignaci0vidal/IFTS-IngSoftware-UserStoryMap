@@ -4,7 +4,7 @@ const fs=require('node:fs');
 const vm=require('node:vm');
 test('renderiza datos reales, filtra backlog y abre criterios',()=>{
   const elements=new Map();
-  const document={getElementById(id){if(!elements.has(id))elements.set(id,{value:'',checked:false,innerHTML:'',textContent:'',addEventListener(){},setAttribute(){},showModal(){this.open=true;},close(){this.open=false;}});return elements.get(id);}};
+  const document={getElementById(id){if(!elements.has(id))elements.set(id,{value:'',checked:false,innerHTML:'',textContent:'',addEventListener(){},setAttribute(name,value){this[name]=String(value);},showModal(){this.open=true;},close(){this.open=false;}});return elements.get(id);}};
   const context=vm.createContext({document,window:{},StoryModel:require('../model.js'),console,Blob,URL,setTimeout});
   vm.runInContext(fs.readFileSync(require.resolve('../data.js'),'utf8'),context);
   vm.runInContext(fs.readFileSync(require.resolve('../app.js'),'utf8'),context);
@@ -28,6 +28,24 @@ test('renderiza datos reales, filtra backlog y abre criterios',()=>{
   vm.runInContext('render()',context);
   assert.doesNotMatch(board.innerHTML,/Sin sprint · finalizado|data-key="SCRUM-(44|47)"/);
   elements.get('tasks').checked=false;
+  for(const priority of ['MUST','SHOULD','COULD','NONE']){
+    elements.get('filter-'+priority).onclick();
+    assert.equal(elements.get('priority').value,priority);
+    assert.equal(elements.get('filter-'+priority)['aria-pressed'],'true');
+    const keys=[...board.innerHTML.matchAll(/data-key="([^"]+)"/g)].map(match=>match[1]);
+    const expected=vm.runInContext("data.issues.filter(i=>i.type==='Story'&&i.moscow==='"+priority+"'&&StoryModel.lane(i)!=='Sin sprint · finalizado').map(i=>i.key)",context);
+    assert.deepEqual(keys.sort(),Array.from(expected).sort());
+  }
+  elements.get('filter-NONE').onclick();
+  assert.equal(elements.get('priority').value,'');
+  assert.equal(elements.get('filter-NONE')['aria-pressed'],'false');
+  assert.match(elements.get('result').textContent,/60 elementos/);
+  elements.get('priority').value='SHOULD';
+  vm.runInContext('render()',context);
+  assert.equal(elements.get('filter-SHOULD')['aria-pressed'],'true');
+  elements.get('reset').onclick();
+  assert.equal(elements.get('filter-SHOULD')['aria-pressed'],'false');
+
   elements.get('sprint').value='Sin sprint · finalizado';
   vm.runInContext('render()',context);
   assert.match(elements.get('result').textContent,/0 elementos/);
